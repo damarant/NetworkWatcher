@@ -6,17 +6,6 @@ notifications when new or blacklisted devices appear on the network.
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-## 🚀 Easy Install (no tools required)
-
-Flash NetworkWatcher directly from your browser:
-
-👉 **[Install NetworkWatcher](https://damarant.github.io/NetworkWatcher/)**
-
-Works on Chrome, Edge or Opera (desktop). No drivers, no Python, no `esptool`.
-The flasher writes both the firmware and the web UI in one click.
-
-> ⚠️ A full flash will overwrite the `storage` partition and erase your MAC lists.
-> Back them up from the web UI first if needed.
 
 ## Features
 
@@ -213,15 +202,8 @@ NetworkWatcher/
 │   ├── log_buffer/       In-RAM log ring buffer
 │   └── esp_littlefs/     LittleFS library (local)
 ├── data/
-│   └── www/              Web UI (LittleFS image)
-└── docs/                 Web flasher (GitHub Pages)
-    ├── index.html
-    └── firmware/
-        ├── manifest.json
-        ├── bootloader.bin
-        ├── partitions.bin
-        ├── NetworkWatcher.bin
-        └── storage.bin
+    └── www/              Web UI (LittleFS image)
+
 ```
 
 ## Partition layout
@@ -246,7 +228,7 @@ NetworkWatcher/
 
 ## Security
 
-Before using NetworkWatcher, please read the [DISCLAIMER](https://disclaimer.md/).  
+Before using NetworkWatcher, please read the [DISCLAIMER](DISCLAIMER.md).
 NetworkWatcher is intended for monitoring your **own** network. Scanning  
 networks you do not own or are not authorized to monitor is illegal in  
 many jurisdictions.
@@ -254,7 +236,7 @@ many jurisdictions.
 ## License
 
 Licensed under the **Apache License, Version 2.0**.  
-See [LICENSE](https://license/) for the full text and [NOTICE](https://notice/) for  
+See [LICENSE](LICENSE) for the full text and [NOTICE](NOTICE) for
 third-party attributions.
 
 ## Author

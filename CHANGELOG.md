@@ -41,7 +41,6 @@ First stable public release.
 - **Factory reset**: via physical button or web UI
 - **WiFi**: AP mode for initial setup, STA mode with retry policy
   (5s → 30s → 5min, infinite)
-- **fix** /index.html + /favicon.ico.
 
 ### Changed
 
@@ -61,3 +60,18 @@ First stable public release.
 - Tested with ESP-IDF v6.1
 - USB CDC console: use Tera Term on COM6 (`idf.py monitor` has known issues)
 - Flash with BOOT+RST on COM3
+
+### Fixed
+
+- **fix** /index.html + /favicon.ico.
+
+### Removed
+
+- Web flasher (ESP Web Tools / Adafruit WebSerial ESPTool) — Web Serial
+  is not compatible with the ESP32-S2 native USB CDC controller on
+  Windows. Flash with `idf.py -p COMx flash` instead.
+  
+  
+ 
+
+  

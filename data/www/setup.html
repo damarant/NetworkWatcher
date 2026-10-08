@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetworkWatcher - Wi-Fi Setup</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 520px;
+            margin: 0 auto;
+            background: #16213e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #4ecca3;
+            margin-top: 0;
+            font-size: 1.5em;
+        }
+        .subtitle {
+            color: #aaa;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #aaa;
+            font-size: 0.9em;
+            margin-top: 16px;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            background: #0f3460;
+            border: 1px solid #1a4080;
+            border-radius: 6px;
+            color: #eee;
+            font-size: 1em;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4ecca3;
+        }
+        .row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+        .row input { flex: 1; }
+        button {
+            padding: 12px 16px;
+            background: #4ecca3;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        button:hover:not(:disabled) {
+            background: #3dbb92;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        button.secondary {
+            background: #0f3460;
+            color: #eee;
+            border: 1px solid #1a4080;
+        }
+        button.secondary:hover:not(:disabled) {
+            background: #1a4080;
+        }
+        button.danger {
+            background: #e94560;
+            color: white;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 24px;
+        }
+        .actions button { flex: 1; }
+        .msg {
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 16px;
+            display: none;
+            font-size: 0.9em;
+        }
+        .msg.show { display: block; }
+        .msg.info    { background: #0f3460; border-left: 4px solid #4ecca3; }
+        .msg.success { background: #0f5132; border-left: 4px solid #4ecca3; color: #d1f4e0; }
+        .msg.error   { background: #5c1e2c; border-left: 4px solid #e94560; color: #f8d7da; }
+        .msg.warn    { background: #664d03; border-left: 4px solid #f0a500; color: #fff3cd; }
+        .net-list {
+            max-height: 220px;
+            overflow-y: auto;
+            margin-top: 12px;
+            border-radius: 6px;
+            background: #0a1a2e;
+            display: none;
+        }
+        .net-list.show { display: block; }
+        .net-item {
+            padding: 10px 14px;
+            border-bottom: 1px solid #1a2a4e;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .net-item:last-child { border-bottom: none; }
+        .net-item:hover { background: #0f3460; }
+        .net-item .ssid { font-weight: 500; }
+        .net-item .meta { font-size: 0.8em; color: #888; }
+        .net-item .rssi { color: #4ecca3; font-size: 0.85em; }
+        .info-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 6px 16px;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        .info-grid .label { color: #888; }
+        .info-grid .value { color: #4ecca3; font-family: "Courier New", monospace; }
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #1a1a2e;
+            border-top: 2px solid #4ecca3;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .topbar a {
+            color: #4ecca3;
+            text-decoration: none;
+            padding: 8px 14px;
+            border: 1px solid #4ecca3;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .topbar a:hover {
+            background: #4ecca3;
+            color: #1a1a2e;
+        }
+        .topbar .logout {
+            color: #e94560;
+            border-color: #e94560;
+        }
+        .topbar .logout:hover {
+            background: #e94560;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="topbar">
+            <a href="/">&#8592; Dashboard</a>
+            <a href="/api/logout" class="logout">Logout</a>
+        </div>
+
+        <h1>&#128246; Wi-Fi Setup</h1>
+        <p class="subtitle">Select the home network to connect to</p>
+
+        <label for="ssid">Network name (SSID)</label>
+        <div class="row">
+            <input type="text" id="ssid" placeholder="My network" autocomplete="off">
+            <button type="button" class="secondary" id="btnScan">Scan</button>
+        </div>
+
+        <div class="net-list" id="netList"></div>
+
+        <label for="pass">Password</label>
+        <input type="password" id="pass" placeholder="Wi-Fi password" autocomplete="new-password">
+
+        <div class="actions">
+            <button type="button" class="secondary" id="btnTest">Test connection</button>
+            <button type="button" id="btnSave">Save and restart</button>
+        </div>
+
+        <div class="msg" id="msg"></div>
+
+        <div class="info-grid" id="netInfo" style="display:none;"></div>
+    </div>
+
+    <script>
+        const $ = (id) => document.getElementById(id);
+
+        let lastTestOk = false;
+
+        function showMsg(type, text) {
+            const m = $('msg');
+            m.className = 'msg show ' + type;
+            m.innerHTML = text;
+        }
+
+        function hideMsg() {
+            $('msg').className = 'msg';
+        }
+
+        function setBusy(btn, busy, originalText) {
+            if (busy) {
+                btn.disabled = true;
+                btn.dataset.orig = originalText || btn.textContent;
+                btn.innerHTML = '<span class="spinner"></span>' + (originalText || btn.textContent);
+            } else {
+                btn.disabled = false;
+                btn.textContent = btn.dataset.orig || originalText || btn.textContent;
+            }
+        }
+
+        // --- Scan ---
+        $('btnScan').addEventListener('click', async () => {
+            const btn = $('btnScan');
+            setBusy(btn, true, 'Scan');
+            hideMsg();
+            $('netList').classList.remove('show');
+
+            try {
+                const res = await fetch('/api/wifi/scan', { method: 'POST' });
+                const data = await res.json();
+
+                if (data.count === 0) {
+                    showMsg('warn', 'No networks found. Try again.');
+                    return;
+                }
+
+                const list = $('netList');
+                list.innerHTML = '';
+                data.aps.forEach(ap => {
+                    const div = document.createElement('div');
+                    div.className = 'net-item';
+                    const lock = ap.auth !== 0 ? ' &#128274;' : '';
+                    div.innerHTML = `
+                        <div>
+                            <div class="ssid">${escapeHtml(ap.ssid)}${lock}</div>
+                            <div class="meta">channel ${ap.ch}</div>
+                        </div>
+                        <div class="rssi">${ap.rssi} dBm</div>
+                    `;
+                    div.addEventListener('click', () => {
+                        $('ssid').value = ap.ssid;
+                        list.classList.remove('show');
+                        showMsg('info', `Selected network <b>${escapeHtml(ap.ssid)}</b>. Enter the password.`);
+                    });
+                    list.appendChild(div);
+                });
+                list.classList.add('show');
+                showMsg('info', `Found <b>${data.count}</b> networks. Click one to select it.`);
+            } catch (e) {
+                showMsg('error', 'Scan error: ' + e.message);
+            } finally {
+                setBusy(btn, false);
+            }
+        });
+
+        // --- Test ---
+        $('btnTest').addEventListener('click', async () => {
+            const ssid = $('ssid').value.trim();
+            const pass = $('pass').value;
+            if (!ssid) {
+                showMsg('error', 'Enter an SSID.');
+                return;
+            }
+
+            const btn = $('btnTest');
+            setBusy(btn, true, 'Test connection');
+            hideMsg();
+            $('netInfo').style.display = 'none';
+            lastTestOk = false;
+
+            try {
+                const body = 'ssid=' + encodeURIComponent(ssid) + '&pass=' + encodeURIComponent(pass);
+                const res = await fetch('/api/wifi/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    lastTestOk = true;
+                    showMsg('success',
+                        `&#9989; Connection successful! Check the parameters below, then press <b>Save and restart</b>.`);
+                    $('netInfo').innerHTML = `
+                        <div class="label">Assigned IP</div><div class="value">${data.ip}</div>
+                        <div class="label">Gateway</div><div class="value">${data.gw}</div>
+                        <div class="label">DNS</div><div class="value">${data.dns || '-'}</div>
+                    `;
+                    $('netInfo').style.display = 'grid';
+                } else {
+                    showMsg('error',
+                        `&#10060; Test failed: ${data.error || 'timeout or wrong credentials'}. ` +
+                        `Check the SSID and password and try again, or save anyway.`);
+                }
+            } catch (e) {
+                showMsg('error', 'Network error: ' + e.message);
+            } finally {
+                setBusy(btn, false);
+            }
+        });
+
+        // --- Save ---
+        $('btnSave').addEventListener('click', async () => {
+            const ssid = $('ssid').value.trim();
+            const pass = $('pass').value;
+
+            if (!ssid) {
+                showMsg('error', 'Enter an SSID before saving.');
+                return;
+            }
+
+            if (!lastTestOk) {
+                const ok = confirm(
+                    'The connection test was not completed successfully.\n\n' +
+                    'Do you want to save anyway? If the network is unreachable, the device ' +
+                    'will keep trying to connect and may become inaccessible until you ' +
+                    'press BOOT for 5 seconds to return to AP mode.\n\n' +
+                    'Save anyway?'
+                );
+                if (!ok) return;
+            }
+
+            const btn = $('btnSave');
+            setBusy(btn, true, 'Save and restart');
+            hideMsg();
+
+            try {
+                const body = 'ssid=' + encodeURIComponent(ssid) + '&pass=' + encodeURIComponent(pass);
+                const res = await fetch('/api/wifi/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    showMsg('success',
+                        '&#9989; Credentials saved. The device is restarting...<br>' +
+                        'If the connection succeeds, you will be redirected to the home network IP.<br>' +
+                        'To return to AP mode, press BOOT for 5 seconds.');
+                } else {
+                    showMsg('error', '&#10060; Save error: ' + (data.error || 'unknown'));
+                    setBusy(btn, false);
+                }
+            } catch (e) {
+                showMsg('info',
+                    '&#128260; Device restarting...<br>' +
+                    'Wait 10 seconds, then look for the device on your home network, ' +
+                    'or reconnect to the "Network Watcher" AP if the connection fails.');
+            }
+        });
+
+        function escapeHtml(s) {
+            return s.replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        // Reset the "lastTestOk" flag if the user changes the SSID after a successful test,
+        // but keep the Save button always enabled.
+        $('ssid').addEventListener('input', () => {
+            if (lastTestOk) {
+                lastTestOk = false;
+                $('netInfo').style.display = 'none';
+                showMsg('warn', 'SSID changed since last test. Save will still work, but the credentials may be wrong.');
+            }
+        });
+    </script>
+</body>
+</html>

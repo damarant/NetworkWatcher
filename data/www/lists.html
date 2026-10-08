@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetworkWatcher - MAC Lists</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #16213e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        h1 { color: #4ecca3; margin-top: 0; font-size: 1.6em; }
+        .topbar {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 20px;
+        }
+        .topbar a {
+            color: #4ecca3; text-decoration: none;
+            padding: 8px 14px; border: 1px solid #4ecca3;
+            border-radius: 4px; font-size: 0.9em;
+        }
+        .topbar a:hover { background: #4ecca3; color: #1a1a2e; }
+        .topbar .logout { color: #e94560; border-color: #e94560; }
+        .topbar .logout:hover { background: #e94560; color: white; }
+        .warning {
+            background: #664d03; border-left: 4px solid #f0a500;
+            color: #fff3cd; padding: 12px; border-radius: 6px;
+            margin-bottom: 20px; font-size: 0.9em;
+        }
+        .tabs {
+            display: flex; gap: 4px;
+            border-bottom: 2px solid #0f3460;
+            margin-bottom: 20px; flex-wrap: wrap;
+        }
+        .tab {
+            padding: 12px 20px; background: #0f3460;
+            color: #aaa; border: none;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer; font-size: 0.95em;
+            font-weight: 600; transition: all 0.2s;
+        }
+        .tab:hover { background: #1a4080; color: #eee; }
+        .tab.active { background: #4ecca3; color: #1a1a2e; }
+        .tab .count {
+            display: inline-block; background: rgba(0,0,0,0.2);
+            padding: 2px 8px; border-radius: 10px;
+            font-size: 0.85em; margin-left: 6px;
+        }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .panel-header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 12px;
+            gap: 12px; flex-wrap: wrap;
+        }
+        .panel-header .info {
+            color: #aaa; font-size: 0.9em; flex: 1; min-width: 200px;
+        }
+        .panel-actions {
+            display: flex; gap: 8px;
+            align-items: center; flex-wrap: wrap;
+        }
+        .bulk-move {
+            display: flex; gap: 4px; align-items: center;
+            background: #0f3460; padding: 4px; border-radius: 6px;
+        }
+        .bulk-move select {
+            background: #0a1a2e; color: #eee;
+            border: 1px solid #1a4080; border-radius: 4px;
+            padding: 6px 8px; font-size: 0.85em;
+            font-family: inherit; cursor: pointer;
+        }
+        .bulk-move select:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn {
+            padding: 8px 16px; background: #4ecca3;
+            color: #1a1a2e; border: none; border-radius: 6px;
+            font-size: 0.9em; font-weight: bold;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .btn:hover:not(:disabled) { background: #3dbb92; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn.bulk { padding: 6px 12px; font-size: 0.85em; }
+        .btn.danger { background: #e94560; color: white; }
+        .btn.danger:hover:not(:disabled) { background: #c73650; }
+        table {
+            width: 100%; border-collapse: collapse;
+            background: #0f3460; border-radius: 8px; overflow: hidden;
+        }
+        th, td {
+            padding: 10px 12px; text-align: left;
+            border-bottom: 1px solid #1a2a4e; font-size: 0.9em;
+        }
+        th {
+            background: #0a1a2e; color: #4ecca3;
+            font-weight: 600; font-size: 0.85em;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        td.mac {
+            font-family: "Courier New", monospace; font-size: 0.9em;
+        }
+        td.mac .ip-small {
+            display: block;
+            color: #4ecca3;
+            font-size: 0.8em;
+            margin-top: 2px;
+        }
+        td.vendor {
+            color: #ddd;
+        }
+        td.desc input {
+            background: transparent; border: none;
+            color: #eee; font-family: inherit;
+            font-size: inherit; width: 100%; padding: 4px;
+            border-radius: 3px;
+        }
+        td.desc input:focus {
+            outline: 1px solid #4ecca3; background: #0a1a2e;
+        }
+        td.actions { white-space: nowrap; text-align: right; }
+        .action-btn {
+            background: transparent; border: 1px solid #1a4080;
+            color: #aaa; padding: 4px 8px; margin: 0 2px;
+            border-radius: 4px; cursor: pointer;
+            font-size: 0.85em; transition: all 0.2s;
+        }
+        .action-btn:hover { background: #1a4080; color: #eee; }
+        .action-btn.move:hover {
+            background: #4ecca3; color: #1a1a2e;
+            border-color: #4ecca3;
+        }
+        .action-btn.delete:hover {
+            background: #e94560; color: white;
+            border-color: #e94560;
+        }
+        .empty {
+            text-align: center; padding: 30px;
+            color: #666; font-style: italic;
+        }
+        .msg {
+            padding: 12px; border-radius: 6px; margin: 15px 0;
+            display: none; font-size: 0.9em;
+        }
+        .msg.show { display: block; }
+        .msg.error { background: #5c1e2c; border-left: 4px solid #e94560; color: #f8d7da; }
+        .msg.success { background: #0f5132; border-left: 4px solid #4ecca3; color: #d1f4e0; }
+        .msg.info { background: #0f3460; border-left: 4px solid #4ecca3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="topbar">
+            <a href="/">&#8592; Dashboard</a>
+            <a href="/api/logout" class="logout">Logout</a>
+        </div>
+
+        <h1>&#128203; MAC Lists</h1>
+
+        <div class="warning" id="timeWarning" style="display:none;">
+            &#9888;&#65039; <b>Time not synced</b> &mdash; Some timestamps shown are relative to boot (uptime), not real dates. Check your Internet connection.
+        </div>
+
+        <div class="msg" id="msg"></div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="whitelist">
+                &#9989; Whitelist <span class="count" id="count-whitelist">0</span>
+            </button>
+            <button class="tab" data-tab="blacklist">
+                &#128683; Blacklist <span class="count" id="count-blacklist">0</span>
+            </button>
+            <button class="tab" data-tab="unknown">
+                &#10067; Unknown <span class="count" id="count-unknown">0</span>
+            </button>
+        </div>
+
+        <div class="panel active" id="panel-whitelist">
+            <div class="panel-header">
+                <span class="info">Authorized devices &mdash; no notification when detected</span>
+                <div class="panel-actions">
+                    <div class="bulk-move">
+                        <select data-bulk-from="whitelist" disabled>
+                            <option value="">Move all to...</option>
+                            <option value="blacklist">&#128683; Blacklist</option>
+                            <option value="unknown">&#10067; Unknown</option>
+                        </select>
+                        <button class="btn bulk" data-bulk-exec="whitelist" disabled>Run</button>
+                    </div>
+                    <button class="btn danger" data-clear="whitelist">Clear</button>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:180px;">MAC</th>
+                        <th style="width:140px;">Vendor</th>
+                        <th>Description</th>
+                        <th style="width:160px;">First seen</th>
+                        <th style="width:160px;">Last seen</th>
+                        <th style="width:180px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-whitelist"></tbody>
+            </table>
+        </div>
+
+        <div class="panel" id="panel-blacklist">
+            <div class="panel-header">
+                <span class="info">Forbidden devices &mdash; notification + LED when detected</span>
+                <div class="panel-actions">
+                    <div class="bulk-move">
+                        <select data-bulk-from="blacklist" disabled>
+                            <option value="">Move all to...</option>
+                            <option value="whitelist">&#9989; Whitelist</option>
+                            <option value="unknown">&#10067; Unknown</option>
+                        </select>
+                        <button class="btn bulk" data-bulk-exec="blacklist" disabled>Run</button>
+                    </div>
+                    <button class="btn danger" data-clear="blacklist">Clear</button>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:180px;">MAC</th>
+                        <th style="width:140px;">Vendor</th>
+                        <th>Description</th>
+                        <th style="width:160px;">First seen</th>
+                        <th style="width:160px;">Last seen</th>
+                        <th style="width:180px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-blacklist"></tbody>
+            </table>
+        </div>
+
+        <div class="panel" id="panel-unknown">
+            <div class="panel-header">
+                <span class="info">New devices &mdash; waiting for classification</span>
+                <div class="panel-actions">
+                    <div class="bulk-move">
+                        <select data-bulk-from="unknown" disabled>
+                            <option value="">Move all to...</option>
+                            <option value="whitelist">&#9989; Whitelist</option>
+                            <option value="blacklist">&#128683; Blacklist</option>
+                        </select>
+                        <button class="btn bulk" data-bulk-exec="unknown" disabled>Run</button>
+                    </div>
+                    <button class="btn danger" data-clear="unknown">Clear</button>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:180px;">MAC</th>
+                        <th style="width:140px;">Vendor</th>
+                        <th>Description</th>
+                        <th style="width:160px;">First seen</th>
+                        <th style="width:160px;">Last seen</th>
+                        <th style="width:180px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-unknown"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const $ = (id) => document.getElementById(id);
+        let currentData = null;
+
+        function setMsg(type, text) {
+            const m = $('msg');
+            m.className = 'msg show ' + type;
+            m.innerHTML = text;
+            setTimeout(() => { m.className = 'msg'; }, 4000);
+        }
+
+        function formatTime(ts, is_unix) {
+            if (!ts || ts === 0) return '&mdash;';
+            if (is_unix) {
+                const d = new Date(ts * 1000);
+                if (isNaN(d.getTime())) return '&mdash;';
+                return d.toLocaleString('en-GB');
+            }
+            const h = Math.floor(ts / 3600);
+            const m = Math.floor((ts % 3600) / 60);
+            const s = ts % 60;
+            if (h > 0) return `${h}h ${m}m (uptime)`;
+            if (m > 0) return `${m}m ${s}s (uptime)`;
+            return `${s}s (uptime)`;
+        }
+
+        function escapeHtml(s) {
+            return (s || '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        function renderList(type) {
+            if (!currentData) return;
+            const list = currentData[type];
+            const tbody = $('tbody-' + type);
+
+            $('count-' + type).textContent = list.count;
+
+            const bulkSelect = document.querySelector(`select[data-bulk-from="${type}"]`);
+            const bulkBtn = document.querySelector(`button[data-bulk-exec="${type}"]`);
+            if (bulkSelect && bulkBtn) {
+                const hasItems = list.count > 0;
+                bulkSelect.disabled = !hasItems;
+                bulkBtn.disabled = !hasItems || !bulkSelect.value;
+            }
+
+            if (list.count === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="empty">No devices in this list.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            list.entries.forEach(e => {
+                const vendor = (e.vendor && e.vendor.length > 0) ? escapeHtml(e.vendor) : '-';
+
+                const ipHtml = (e.ip && e.ip.length > 0)
+                    ? `<span class="ip-small">${escapeHtml(e.ip)}</span>`
+                    : '';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="mac">${e.mac}${ipHtml}</td>
+                    <td class="vendor">${vendor}</td>
+                    <td class="desc">
+                        <input type="text" value="${escapeHtml(e.desc)}"
+                               data-mac="${e.mac}" data-type="${type}"
+                               maxlength="32" placeholder="(no description)">
+                    </td>
+                    <td>${formatTime(e.first_seen, e.first_seen_is_unix)}</td>
+                    <td>${formatTime(e.last_seen, e.last_seen_is_unix)}</td>
+                    <td class="actions">
+                        ${type !== 'whitelist' ? `<button class="action-btn move" data-move="whitelist" data-mac="${e.mac}" data-from="${type}" title="Move to Whitelist">&#8594; &#9989;</button>` : ''}
+                        ${type !== 'blacklist' ? `<button class="action-btn move" data-move="blacklist" data-mac="${e.mac}" data-from="${type}" title="Move to Blacklist">&#8594; &#128683;</button>` : ''}
+                        ${type !== 'unknown' ? `<button class="action-btn move" data-move="unknown" data-mac="${e.mac}" data-from="${type}" title="Move to Unknown">&#8594; &#10067;</button>` : ''}
+                        <button class="action-btn delete" data-remove="${e.mac}" data-type="${type}" title="Remove">&#128465;</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            tbody.querySelectorAll('input[data-mac]').forEach(inp => {
+                inp.addEventListener('blur', async () => {
+                    const mac = inp.dataset.mac;
+                    const type = inp.dataset.type;
+                    const desc = inp.value.trim();
+
+                    const body = `type=${type}&mac=${encodeURIComponent(mac)}&desc=${encodeURIComponent(desc)}`;
+                    const res = await fetch('/api/lists/desc', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body
+                    });
+                    const data = await res.json();
+                    if (data.ok) {
+                        setMsg('success', 'Description updated');
+                    } else {
+                        setMsg('error', '&#10060; ' + (data.error || 'Error'));
+                    }
+                });
+            });
+
+            tbody.querySelectorAll('button[data-move]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const mac = btn.dataset.mac;
+                    const from = btn.dataset.from;
+                    const to = btn.dataset.move;
+
+                    const body = `from=${from}&to=${to}&mac=${encodeURIComponent(mac)}`;
+                    const res = await fetch('/api/lists/move', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body
+                    });
+                    const data = await res.json();
+                    if (data.ok) {
+                        setMsg('success', `Moved to ${to}`);
+                        await loadLists();
+                    } else {
+                        setMsg('error', '&#10060; ' + (data.error || 'Error'));
+                    }
+                });
+            });
+
+            tbody.querySelectorAll('button[data-remove]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const mac = btn.dataset.remove;
+                    const type = btn.dataset.type;
+
+                    if (!confirm(`Remove ${mac} from ${type} list?`)) return;
+
+                    const body = `type=${type}&mac=${encodeURIComponent(mac)}`;
+                    const res = await fetch('/api/lists/remove', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body
+                    });
+                    const data = await res.json();
+                    if (data.ok) {
+                        setMsg('success', 'Removed');
+                        await loadLists();
+                    } else {
+                        setMsg('error', '&#10060; ' + (data.error || 'Error'));
+                    }
+                });
+            });
+        }
+
+        function renderAll() {
+            renderList('whitelist');
+            renderList('blacklist');
+            renderList('unknown');
+
+            if (currentData && !currentData.time_synced) {
+                $('timeWarning').style.display = 'block';
+            } else {
+                $('timeWarning').style.display = 'none';
+            }
+        }
+
+        async function loadLists() {
+            try {
+                const res = await fetch('/api/lists');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                currentData = await res.json();
+                renderAll();
+            } catch (e) {
+                setMsg('error', 'Loading error: ' + e.message);
+            }
+        }
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                $('panel-' + tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('button[data-clear]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const type = btn.dataset.clear;
+                if (!confirm(`Completely clear the ${type} list?`)) return;
+
+                const body = `type=${type}`;
+                const res = await fetch('/api/lists/clear', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    setMsg('success', `${type} list cleared`);
+                    await loadLists();
+                } else {
+                    setMsg('error', '&#10060; ' + (data.error || 'Error'));
+                }
+            });
+        });
+
+        document.querySelectorAll('select[data-bulk-from]').forEach(sel => {
+            sel.addEventListener('change', () => {
+                const from = sel.dataset.bulkFrom;
+                const btn = document.querySelector(`button[data-bulk-exec="${from}"]`);
+                if (btn) {
+                    btn.disabled = !sel.value;
+                }
+            });
+        });
+
+        document.querySelectorAll('button[data-bulk-exec]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const from = btn.dataset.bulkExec;
+                const sel = document.querySelector(`select[data-bulk-from="${from}"]`);
+                const to = sel.value;
+
+                if (!to) {
+                    setMsg('error', 'Select a destination');
+                    return;
+                }
+                if (from === to) {
+                    setMsg('error', 'Source and destination lists are the same');
+                    return;
+                }
+
+                const count = currentData[from].count;
+                if (!confirm(`Move all ${count} items from ${from} to ${to}?`)) {
+                    return;
+                }
+
+                const body = `from=${from}&to=${to}`;
+                btn.disabled = true;
+
+                try {
+                    const res = await fetch('/api/lists/move-all', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body
+                    });
+                    const data = await res.json();
+
+                    if (data.ok) {
+                        let msg = `&#9989; Moved ${data.moved} items from ${from} to ${to}`;
+                        if (data.failed > 0) {
+                            msg += ` (${data.failed} not moved: destination list full)`;
+                            setMsg('info', msg);
+                        } else {
+                            setMsg('success', msg);
+                        }
+                        sel.value = '';
+                        await loadLists();
+                    } else {
+                        setMsg('error', '&#10060; ' + (data.error || 'Error'));
+                    }
+                } catch (e) {
+                    setMsg('error', 'Network error: ' + e.message);
+                }
+            });
+        });
+
+        window.addEventListener('load', loadLists);
+        setInterval(loadLists, 15000);
+    </script>
+</body>
+</html>

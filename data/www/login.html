@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetworkWatcher - Login</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: #16213e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #4ecca3;
+            margin-top: 0;
+            text-align: center;
+            font-size: 1.6em;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #aaa;
+            font-size: 0.9em;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 16px;
+            background: #0f3460;
+            border: 1px solid #1a4080;
+            border-radius: 6px;
+            color: #eee;
+            font-size: 1em;
+        }
+        input:focus {
+            outline: none;
+            border-color: #4ecca3;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #4ecca3;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #3dbb92;
+        }
+        .error {
+            background: #e94560;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            text-align: center;
+            display: none;
+        }
+        .error.show {
+            display: block;
+        }
+        .hint {
+            color: #666;
+            font-size: 0.8em;
+            text-align: center;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>&#128737;&#65039; NetworkWatcher</h1>
+
+        <div class="error" id="error">Invalid credentials</div>
+
+        <form id="loginForm" method="POST" action="/api/login">
+            <label for="user">Username</label>
+            <input type="text" id="user" name="user" required autofocus>
+
+            <label for="pass">Password</label>
+            <input type="password" id="pass" name="pass" required>
+
+            <button type="submit">Login</button>
+        </form>
+
+        <p class="hint">Default credentials: admin / admin</p>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('error')) {
+            document.getElementById('error').classList.add('show');
+        }
+    </script>
+</body>
+</html>

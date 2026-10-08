@@ -1,0 +1,62 @@
+NetworkWatcher
+Copyright 2026 damarant
+
+This product includes software developed as part of the
+NetworkWatcher project:
+  https://github.com/damarant/NetworkWatcher
+
+-------------------------------------------------------------------
+Third-party components
+-------------------------------------------------------------------
+
+This firmware is built on top of the following open-source projects:
+
+* ESP-IDF
+  Copyright 2016-2026 Espressif Systems (Shanghai) CO LTD
+  Licensed under the Apache License, Version 2.0
+  https://github.com/espressif/esp-idf
+
+* esp_littlefs
+  Copyright 2018-2026 joltwallet
+  Licensed under the MIT License
+  https://github.com/joltwallet/esp_littlefs
+
+* littlefs
+  Copyright 2017-2026 ARM Limited
+  Licensed under the BSD 3-Clause License
+  https://github.com/littlefs-project/littlefs
+
+* mbedTLS
+  Copyright 2006-2026 The mbedTLS project contributors
+  Licensed under the Apache License, Version 2.0
+  https://github.com/Mbed-TLS/mbedtls
+
+* espressif/mdns (managed component)
+  Copyright 2017-2026 Espressif Systems (Shanghai) CO LTD
+  Licensed under the Apache License, Version 2.0
+  https://components.espressif.com/components/espressif/mdns
+
+* FreeRTOS Kernel
+  Copyright 2020-2026 Amazon.com, Inc. or its affiliates
+  Licensed under the MIT License
+  https://github.com/FreeRTOS/FreeRTOS-Kernel
+
+* lwIP
+  Copyright 2001-2026 Swedish Institute of Computer Science
+  Licensed under the BSD 3-Clause License
+  https://savannah.nongnu.org/projects/lwip/
+
+
+Each component is licensed under the terms indicated above.
+See the respective upstream repositories for the full license texts.
+
+-------------------------------------------------------------------
+Trademarks
+-------------------------------------------------------------------
+
+WEMOS and WEMOS S2 Mini are trademarks of their respective owners.
+ESP32 and ESP32-S2 are trademarks of Espressif Systems (Shanghai) CO LTD.
+All other trademarks are the property of their respective owners.
+
+This project is not affiliated with, endorsed by, or sponsored by
+any of the trademark holders mentioned above.

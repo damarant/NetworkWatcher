@@ -1,0 +1,64 @@
+# ============================================================
+# NetworkWatcher - Configurazione di default
+# ============================================================
+# Questo file viene letto da idf.py al primo build.
+# Le voci qui definite sovrascrivono i default di ESP-IDF.
+# Dopo il primo build, il file sdkconfig conterrÃ  la config completa.
+# ============================================================
+
+# --- Target ---
+CONFIG_IDF_TARGET="esp32s2"
+
+# --- Flash ---
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHMODE_DIO=y
+CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
+
+# --- Partizioni custom ---
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+CONFIG_PARTITION_TABLE_FILENAME="partitions.csv"
+
+# --- Console USB CDC ---
+CONFIG_ESP_CONSOLE_USB_CDC=y
+CONFIG_ESP_CONSOLE_USB_CDC_RX_BUF_SIZE=512
+
+# --- FreeRTOS ---
+CONFIG_FREERTOS_HZ=1000
+
+# --- Log ---
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+CONFIG_LOG_MAXIMUM_LEVEL_DEBUG=y
+
+# --- Wi-Fi ---
+CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM=8
+CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM=16
+CONFIG_ESP_WIFI_DYNAMIC_TX_BUFFER_NUM=16
+CONFIG_ESP_WIFI_AMPDU_RX_ENABLED=y
+CONFIG_ESP_WIFI_AMPDU_TX_ENABLED=y
+
+# --- lwIP ---
+CONFIG_LWIP_MAX_SOCKETS=24
+CONFIG_LWIP_SO_RCVBUF=y
+
+# --- lwIP core locking (necessario per arp_scanner) ---
+CONFIG_LWIP_TCPIP_CORE_LOCKING=y
+
+# --- LittleFS ---
+CONFIG_LITTLEFS_MAX_PARTITIONS=1
+CONFIG_LITTLEFS_USE_MTIME=y
+
+# --- LittleFS: flush su flash ad ogni fclose (robustezza persistenza) ---
+CONFIG_LITTLEFS_FLUSH_FILE_EVERY_WRITE=y
+
+# --- Telegram / HTTPS (Fase 2.7) ---
+CONFIG_ESP_HTTP_CLIENT_ENABLE_HTTPS=y
+CONFIG_ESP_TLS_INSECURE=n
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=y
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_FULL=y
+CONFIG_MBEDTLS_SSL_PROTO_TLS1_2=y
+CONFIG_MBEDTLS_SSL_PROTO_TLS1_3=n
+
+# --- mbedTLS: buffer TLS ridotti per risparmiare heap durante handshake ---
+CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN=4096
+CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN=4096

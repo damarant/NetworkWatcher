@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetworkWatcher - Network Scan</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #16213e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #4ecca3;
+            margin-top: 0;
+            font-size: 1.6em;
+        }
+        h2 {
+            color: #4ecca3;
+            font-size: 1.1em;
+            margin-top: 24px;
+        }
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .topbar a {
+            color: #4ecca3;
+            text-decoration: none;
+            padding: 8px 14px;
+            border: 1px solid #4ecca3;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .topbar a:hover {
+            background: #4ecca3;
+            color: #1a1a2e;
+        }
+        .topbar .logout {
+            color: #e94560;
+            border-color: #e94560;
+        }
+        .topbar .logout:hover {
+            background: #e94560;
+            color: white;
+        }
+        .actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 12px 24px;
+            background: #4ecca3;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover:not(:disabled) {
+            background: #3dbb92;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .status {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            background: #0f3460;
+        }
+        .status.scanning {
+            background: #f0a500;
+            color: #1a1a2e;
+            font-weight: bold;
+        }
+        .status.ok {
+            background: #0f5132;
+            color: #d1f4e0;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .stat {
+            background: #0f3460;
+            padding: 14px;
+            border-radius: 8px;
+            border-left: 4px solid #4ecca3;
+        }
+        .stat .label {
+            color: #aaa;
+            font-size: 0.8em;
+            margin-bottom: 4px;
+        }
+        .stat .value {
+            color: #4ecca3;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: #0f3460;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #1a2a4e;
+        }
+        th {
+            background: #0a1a2e;
+            color: #4ecca3;
+            font-weight: 600;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        td {
+            font-family: "Courier New", monospace;
+            font-size: 0.95em;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: #1a4080; }
+        .empty {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            font-style: italic;
+        }
+        .msg {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
+            display: none;
+            font-size: 0.9em;
+        }
+        .msg.show { display: block; }
+        .msg.error { background: #5c1e2c; border-left: 4px solid #e94560; color: #f8d7da; }
+        .msg.info { background: #0f3460; border-left: 4px solid #4ecca3; }
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid #1a1a2e;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="topbar">
+            <a href="/">&#8592; Dashboard</a>
+            <a href="/api/logout" class="logout">Logout</a>
+        </div>
+
+        <h1>&#128225; Network Scan</h1>
+
+        <div class="actions">
+            <button id="btnScan">Scan now</button>
+            <div class="status" id="status">Ready</div>
+        </div>
+
+        <div class="msg" id="msg"></div>
+
+        <div class="stats" id="stats" style="display:none;">
+            <div class="stat">
+                <div class="label">Devices found</div>
+                <div class="value" id="statCount">0</div>
+            </div>
+            <div class="stat">
+                <div class="label">IPs scanned</div>
+                <div class="value" id="statScanned">0</div>
+            </div>
+            <div class="stat">
+                <div class="label">Duration</div>
+                <div class="value" id="statDuration">0 ms</div>
+            </div>
+        </div>
+
+        <h2>Detected devices</h2>
+        <table id="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>IP address</th>
+                    <th>MAC address</th>
+                </tr>
+            </thead>
+            <tbody id="tbody">
+                <tr><td colspan="3" class="empty">No scan available. Press "Scan now".</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const $ = (id) => document.getElementById(id);
+
+        let pollInterval = null;
+
+        function setStatus(text, cls) {
+            const el = $('status');
+            el.textContent = text;
+            el.className = 'status' + (cls ? ' ' + cls : '');
+        }
+
+        function showMsg(type, text) {
+            const m = $('msg');
+            m.className = 'msg show ' + type;
+            m.innerHTML = text;
+        }
+
+        function hideMsg() {
+            $('msg').className = 'msg';
+        }
+
+        async function fetchLast() {
+            try {
+                const res = await fetch('/api/scan/last');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                renderResult(data);
+                return data;
+            } catch (e) {
+                showMsg('error', 'Error fetching results: ' + e.message);
+                return null;
+            }
+        }
+
+        function renderResult(data) {
+            if (!data.valid) {
+                $('stats').style.display = 'none';
+                return;
+            }
+
+            $('statCount').textContent    = data.count;
+            $('statScanned').textContent  = data.scanned_ips;
+            $('statDuration').textContent = data.duration_ms + ' ms';
+            $('stats').style.display = 'grid';
+
+            const tbody = $('tbody');
+            tbody.innerHTML = '';
+
+            if (data.count === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="empty">No devices found.</td></tr>';
+                return;
+            }
+
+            data.devices.forEach((dev, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${i + 1}</td>
+                    <td>${dev.ip}</td>
+                    <td>${dev.mac}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function checkStatus() {
+            try {
+                const res = await fetch('/api/scan/status');
+                const data = await res.json();
+                return data.scanning;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        $('btnScan').addEventListener('click', async () => {
+            const btn = $('btnScan');
+            btn.disabled = true;
+            hideMsg();
+
+            try {
+                const res = await fetch('/api/scan/now', { method: 'POST' });
+                const data = await res.json();
+
+                if (!data.ok) {
+                    showMsg('error', '&#10060; ' + (data.error || 'Error starting scan'));
+                    btn.disabled = false;
+                    return;
+                }
+
+                setStatus('Scanning...', 'scanning');
+                btn.innerHTML = '<span class="spinner"></span>Scanning...';
+
+                let elapsed = 0;
+                pollInterval = setInterval(async () => {
+                    elapsed += 2;
+                    const scanning = await checkStatus();
+
+                    if (!scanning) {
+                        clearInterval(pollInterval);
+                        pollInterval = null;
+
+                        setStatus('Completed', 'ok');
+                        btn.disabled = false;
+                        btn.textContent = 'Scan now';
+
+                        await fetchLast();
+                        showMsg('info', '&#9989; Scan completed in ' + elapsed + ' seconds');
+                    } else if (elapsed > 120) {
+                        clearInterval(pollInterval);
+                        pollInterval = null;
+                        setStatus('Timeout', '');
+                        btn.disabled = false;
+                        btn.textContent = 'Scan now';
+                        showMsg('error', '&#9888;&#65039; Timeout: scan did not complete within 2 minutes');
+                    }
+                }, 2000);
+
+            } catch (e) {
+                showMsg('error', 'Network error: ' + e.message);
+                btn.disabled = false;
+                btn.textContent = 'Scan now';
+            }
+        });
+
+        window.addEventListener('load', async () => {
+            const scanning = await checkStatus();
+            if (scanning) {
+                setStatus('Scanning...', 'scanning');
+                $('btnScan').disabled = true;
+                $('btnScan').innerHTML = '<span class="spinner"></span>Scanning...';
+            } else {
+                await fetchLast();
+            }
+        });
+    </script>
+</body>
+</html>

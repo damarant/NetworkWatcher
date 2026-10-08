@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetworkWatcher - Log</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #16213e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        h1 { color: #4ecca3; margin-top: 0; font-size: 1.6em; }
+        .topbar {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 20px;
+        }
+        .topbar a {
+            color: #4ecca3; text-decoration: none;
+            padding: 8px 14px; border: 1px solid #4ecca3;
+            border-radius: 4px; font-size: 0.9em;
+        }
+        .topbar a:hover { background: #4ecca3; color: #1a1a2e; }
+        .topbar .logout { color: #e94560; border-color: #e94560; }
+        .topbar .logout:hover { background: #e94560; color: white; }
+        .actions {
+            display: flex; gap: 10px; align-items: center;
+            margin-bottom: 16px; flex-wrap: wrap;
+        }
+        .btn {
+            padding: 8px 16px; background: #4ecca3;
+            color: #1a1a2e; border: none; border-radius: 6px;
+            font-size: 0.9em; font-weight: bold;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .btn:hover:not(:disabled) { background: #3dbb92; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn.danger { background: #e94560; color: white; }
+        .btn.danger:hover:not(:disabled) { background: #c73650; }
+        .status {
+            color: #aaa; font-size: 0.85em;
+            margin-left: auto;
+        }
+        .status .dot {
+            display: inline-block; width: 8px; height: 8px;
+            border-radius: 50%; background: #4ecca3;
+            margin-right: 6px; animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .log-box {
+            background: #0a1a2e;
+            border: 1px solid #1a4080;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: "Courier New", monospace;
+            font-size: 0.85em;
+            line-height: 1.5;
+            max-height: 70vh;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .log-line {
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(26, 64, 128, 0.3);
+        }
+        .log-line:last-child { border-bottom: none; }
+        .log-line.warn { color: #fff3cd; }
+        .log-line.err  { color: #f8d7da; }
+        .empty {
+            text-align: center; padding: 40px 20px;
+            color: #666; font-style: italic;
+        }
+        .info-bar {
+            background: #0f3460;
+            border-left: 4px solid #4ecca3;
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        .info-bar b { color: #4ecca3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="topbar">
+            <a href="/">&#8592; Dashboard</a>
+            <a href="/api/logout" class="logout">Logout</a>
+        </div>
+
+        <h1>&#128220; System Log</h1>
+
+        <div class="info-bar">
+            Latest <b>WARNING</b> and <b>ERROR</b> messages.
+            In-RAM buffer: it is cleared on every reboot.
+            Auto-refresh every 5 seconds.
+        </div>
+
+        <div class="actions">
+            <button class="btn" id="btnRefresh">&#128260; Refresh now</button>
+            <button class="btn danger" id="btnClear">&#128465; Clear log</button>
+            <span class="status" id="status"><span class="dot"></span>auto-refresh active</span>
+        </div>
+
+        <div class="log-box" id="logBox">
+            <div class="empty">Loading...</div>
+        </div>
+    </div>
+
+    <script>
+        const $ = (id) => document.getElementById(id);
+        let autoRefresh = true;
+        let refreshTimer = null;
+
+        function escapeHtml(s) {
+            return (s || '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        function renderLines(lines) {
+            const box = $('logBox');
+            if (!lines || lines.length === 0) {
+                box.innerHTML = '<div class="empty">No WARNING or ERROR logs at the moment.</div>';
+                return;
+            }
+
+            /* Show last 60 lines, in chronological order */
+            const shown = lines.slice(-60);
+
+            /* Auto-scroll at the bottom only if the user was already at the bottom */
+            const wasAtBottom = (box.scrollHeight - box.scrollTop - box.clientHeight) < 30;
+
+            box.innerHTML = '';
+            shown.forEach(line => {
+                const div = document.createElement('div');
+                let cls = 'log-line';
+                if (line.startsWith('E')) cls += ' err';
+                else if (line.startsWith('W')) cls += ' warn';
+                div.className = cls;
+                div.textContent = line;
+                box.appendChild(div);
+            });
+
+            if (wasAtBottom) {
+                box.scrollTop = box.scrollHeight;
+            }
+        }
+
+        async function loadLogs() {
+            try {
+                const res = await fetch('/api/logs');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                renderLines(data.lines || []);
+            } catch (e) {
+                $('logBox').innerHTML =
+                    '<div class="empty">Error: ' + escapeHtml(e.message) + '</div>';
+            }
+        }
+
+        function startAutoRefresh() {
+            if (refreshTimer) clearInterval(refreshTimer);
+            refreshTimer = setInterval(loadLogs, 5000);
+            $('status').innerHTML = '<span class="dot"></span>auto-refresh active';
+            autoRefresh = true;
+        }
+
+        function stopAutoRefresh() {
+            if (refreshTimer) {
+                clearInterval(refreshTimer);
+                refreshTimer = null;
+            }
+            $('status').textContent = 'auto-refresh paused';
+            autoRefresh = false;
+        }
+
+        /* Manual click: refresh + pause auto-refresh for 15 seconds */
+        $('btnRefresh').addEventListener('click', async () => {
+            await loadLogs();
+            stopAutoRefresh();
+            setTimeout(() => {
+                if (!autoRefresh) startAutoRefresh();
+            }, 15000);
+        });
+
+        /* Clear */
+        $('btnClear').addEventListener('click', async () => {
+            if (!confirm('Completely clear the log buffer?')) return;
+
+            const btn = $('btnClear');
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/logs/clear', { method: 'POST' });
+                const data = await res.json();
+                if (data.ok) {
+                    await loadLogs();
+                }
+            } catch (e) {
+                /* ignore */
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        /* Pause auto-refresh when the tab loses focus */
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopAutoRefresh();
+            } else if (!autoRefresh) {
+                startAutoRefresh();
+            }
+        });
+
+        window.addEventListener('load', () => {
+            loadLogs();
+            startAutoRefresh();
+        });
+    </script>
+</body>
+</html>

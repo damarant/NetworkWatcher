@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetworkWatcher - Settings</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container { max-width: 700px; margin: 0 auto; }
+        h1 { color: #4ecca3; margin: 0 0 20px 0; font-size: 1.6em; }
+        .topbar {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 20px;
+        }
+        .topbar a {
+            color: #4ecca3; text-decoration: none;
+            padding: 8px 14px; border: 1px solid #4ecca3;
+            border-radius: 4px; font-size: 0.9em;
+        }
+        .topbar a:hover { background: #4ecca3; color: #1a1a2e; }
+        .topbar .logout { color: #e94560; border-color: #e94560; }
+        .topbar .logout:hover { background: #e94560; color: white; }
+        .card {
+            background: #16213e; padding: 20px;
+            border-radius: 12px; margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            border-left: 4px solid #4ecca3;
+        }
+        .card.danger { border-left-color: #e94560; }
+        .card h2 { color: #4ecca3; margin: 0 0 4px 0; font-size: 1.2em; }
+        .card.danger h2 { color: #e94560; }
+        .card .subtitle { color: #aaa; font-size: 0.85em; margin: 0 0 16px 0; }
+        label {
+            display: block; color: #aaa; font-size: 0.9em;
+            margin-bottom: 6px; margin-top: 12px;
+        }
+        input, select {
+            width: 100%; padding: 10px 12px;
+            background: #0f3460; border: 1px solid #1a4080;
+            border-radius: 6px; color: #eee; font-size: 1em;
+            font-family: inherit;
+        }
+        input:focus, select:focus { outline: none; border-color: #4ecca3; }
+        select { cursor: pointer; }
+        .btn {
+            margin-top: 16px; padding: 10px 20px;
+            background: #4ecca3; color: #1a1a2e;
+            border: none; border-radius: 6px;
+            font-size: 1em; font-weight: bold;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .btn:hover:not(:disabled) { background: #3dbb92; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn.danger { background: #e94560; color: white; }
+        .btn.danger:hover:not(:disabled) { background: #c73650; }
+        .btn.secondary {
+            background: transparent; color: #4ecca3;
+            border: 1px solid #4ecca3;
+        }
+        .btn.secondary:hover:not(:disabled) { background: #4ecca3; color: #1a1a2e; }
+        .msg {
+            padding: 10px 14px; border-radius: 6px;
+            margin-top: 12px; font-size: 0.9em; display: none;
+        }
+        .msg.show { display: block; }
+        .msg.success { background: #0f5132; border-left: 4px solid #4ecca3; color: #d1f4e0; }
+        .msg.error { background: #5c1e2c; border-left: 4px solid #e94560; color: #f8d7da; }
+        .msg.info { background: #0f3460; border-left: 4px solid #4ecca3; }
+        .status-badge {
+            display: inline-block; padding: 3px 10px;
+            border-radius: 12px; font-size: 0.8em; font-weight: bold;
+        }
+        .status-badge.ok { background: #0f5132; color: #d1f4e0; }
+        .status-badge.warn { background: #664d03; color: #fff3cd; }
+        .hint { color: #888; font-size: 0.8em; margin-top: 6px; }
+        .hint.info {
+            color: #4ecca3; background: rgba(78, 204, 163, 0.08);
+            padding: 6px 10px; border-radius: 4px;
+            border-left: 2px solid #4ecca3;
+        }
+        .row-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        input[type="file"] { padding: 8px; cursor: pointer; }
+        input[type="file"]::file-selector-button {
+            padding: 8px 14px; margin-right: 12px;
+            background: #4ecca3; color: #1a1a2e;
+            border: none; border-radius: 4px;
+            font-weight: bold; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="topbar">
+            <a href="/">&#8592; Dashboard</a>
+            <a href="/api/logout" class="logout">Logout</a>
+        </div>
+
+        <h1>&#9881;&#65039; Settings</h1>
+
+        <!-- CHANGE PASSWORD -->
+        <div class="card">
+            <h2>&#128274; Change Password</h2>
+            <p class="subtitle">Change the administrator login password</p>
+
+            <label for="old_pass">Current password</label>
+            <input type="password" id="old_pass" autocomplete="current-password">
+
+            <label for="new_pass">New password (min 8 characters)</label>
+            <input type="password" id="new_pass" minlength="8" autocomplete="new-password">
+
+            <label for="confirm_pass">Confirm new password</label>
+            <input type="password" id="confirm_pass" minlength="8" autocomplete="new-password">
+
+            <button class="btn" id="btnPwd">Change Password</button>
+            <div class="msg" id="msgPwd"></div>
+        </div>
+
+        <!-- SCAN INTERVAL -->
+        <div class="card">
+            <h2>&#128225; Network Scan Interval</h2>
+            <p class="subtitle">How often to run the automatic ARP scan</p>
+
+            <label for="interval">Interval</label>
+            <select id="interval">
+                <option value="1">1 minute</option>
+                <option value="5">5 minutes</option>
+                <option value="10">10 minutes</option>
+                <option value="15">15 minutes</option>
+                <option value="30">30 minutes</option>
+                <option value="60">60 minutes</option>
+            </select>
+            <p class="hint">Minimum interval: 1 minute. Maximum: 60 minutes.</p>
+
+            <button class="btn" id="btnInterval">Save Interval</button>
+            <div class="msg" id="msgInterval"></div>
+
+            <p class="hint info" style="margin-top:14px;">
+                &#8505;&#65039; The new interval will be active at the end of the current
+                wait cycle. If you have just set a different value, the change
+                will apply starting from the next automatic scan.
+            </p>
+        </div>
+
+        <!-- TELEGRAM -->
+        <div class="card">
+            <h2>&#128232; Telegram Notifications</h2>
+            <p class="subtitle">
+                Configure the bot to receive notifications about detected devices
+                <span class="status-badge warn" id="tgStatus">not configured</span>
+            </p>
+
+            <label for="tg_token">Bot Token</label>
+            <input type="text" id="tg_token" placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz" autocomplete="off">
+            <p class="hint">Get it from @BotFather on Telegram</p>
+
+            <label for="tg_chatid">Chat ID</label>
+            <input type="text" id="tg_chatid" placeholder="123456789" autocomplete="off">
+            <p class="hint">Your personal ID or a group ID</p>
+
+            <div class="row-buttons">
+                <button class="btn" id="btnTgSave">Save</button>
+                <button class="btn secondary" id="btnTgTest">&#128228; Send test message</button>
+                <button class="btn danger" id="btnTgClear" style="display:none;">&#128465; Delete credentials</button>
+            </div>
+            <div class="msg" id="msgTg"></div>
+            <p class="hint" style="margin-top:8px;">
+                The test uses the token and chat ID entered above, without saving them first.
+                If you receive the message on Telegram, they are correct: you can save them.
+            </p>
+        </div>
+
+        <!-- WEBHOOK -->
+        <div class="card">
+            <h2>&#128279; Webhook Notifications</h2>
+            <p class="subtitle">
+                Send notifications via HTTP POST to an external service
+                <span class="status-badge warn" id="whStatus">not configured</span>
+            </p>
+
+            <label for="wh_url">Webhook URL</label>
+            <input type="text" id="wh_url" placeholder="https://ntfy.sh/my-topic" autocomplete="off">
+            <p class="hint">
+                Compatible with ntfy.sh, Discord, Slack, IFTTT, Home Assistant, Gotify, custom servers.
+                Must start with <code>http://</code> or <code>https://</code>.
+            </p>
+
+            <label for="wh_token">Bearer Token <span style="color:#666;">(optional)</span></label>
+            <input type="text" id="wh_token" placeholder="(leave empty if not required)" autocomplete="off">
+            <p class="hint">
+                If set, it is sent as header <code>Authorization: Bearer XXX</code>.
+                Use it for Slack, Gotify, Home Assistant, ntfy with token.
+            </p>
+
+            <div class="row-buttons">
+                <button class="btn" id="btnWhSave">Save</button>
+                <button class="btn secondary" id="btnWhTest">&#128228; Send test message</button>
+                <button class="btn danger" id="btnWhClear" style="display:none;">&#128465; Delete credentials</button>
+            </div>
+            <div class="msg" id="msgWh"></div>
+            <p class="hint" style="margin-top:8px;">
+                The test uses the URL and token entered above, without saving them first.
+                If you receive the notification on the service, they are correct: you can save them.
+            </p>
+        </div>
+
+        <!-- BACKUP AND RESTORE -->
+        <div class="card">
+            <h2>&#128190; Backup and Restore</h2>
+            <p class="subtitle">
+                Export or import MAC lists and scan settings.
+                <b>Does not</b> include WiFi credentials, admin password, Telegram, Webhook.
+            </p>
+
+            <div class="row-buttons">
+                <button class="btn" id="btnExport">&#128229; Export lists</button>
+            </div>
+            <p class="hint">
+                Download a <code>.json</code> file with whitelist, blacklist and unknown.
+                Keep it to restore the lists after a full flash.
+            </p>
+
+            <hr style="border:none; border-top:1px solid #1a4080; margin: 20px 0;">
+
+            <label for="import_file">Import from file</label>
+            <input type="file" id="import_file" accept=".json,application/json">
+            <div class="row-buttons">
+                <button class="btn danger" id="btnImport" disabled>&#128228; Import and replace</button>
+            </div>
+            <p class="hint" style="color: #f0a500;">
+                &#9888;&#65039; Importing <b>replaces</b> the current lists with those from the file.
+                This operation is not reversible. The file is loaded as-is:
+                any manual modifications are at your own risk.
+            </p>
+
+            <div class="msg" id="msgBackup"></div>
+        </div>
+
+        <!-- FACTORY RESET -->
+        <div class="card danger">
+            <h2>&#9888;&#65039; Factory Reset</h2>
+            <p class="subtitle">
+                Deletes EVERYTHING: Wi-Fi credentials, MAC lists, settings, admin password, Telegram, Webhook.
+                The device will return to the initial state.
+            </p>
+
+            <label for="reset_confirm">Type <b>RESET</b> to confirm</label>
+            <input type="text" id="reset_confirm" placeholder="RESET" autocomplete="off">
+
+            <button class="btn danger" id="btnReset">Factory Reset</button>
+            <div class="msg" id="msgReset"></div>
+        </div>
+    </div>
+
+    <script>
+        const $ = (id) => document.getElementById(id);
+        let tgConfigured = false;
+        let whConfigured = false;
+
+        function showMsg(elId, type, text) {
+            const m = $(elId);
+            m.className = 'msg show ' + type;
+            m.innerHTML = text;
+            setTimeout(() => { m.className = 'msg'; }, 5000);
+        }
+
+        async function loadSettings() {
+            try {
+                const res = await fetch('/api/settings/get');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+
+                const sel = $('interval');
+                sel.value = String(data.scan_interval);
+                if (sel.value !== String(data.scan_interval)) {
+                    const opt = document.createElement('option');
+                    opt.value = data.scan_interval;
+                    opt.textContent = data.scan_interval + ' minutes';
+                    sel.appendChild(opt);
+                    sel.value = String(data.scan_interval);
+                }
+
+                /* --- Telegram --- */
+                tgConfigured = !!data.telegram_configured;
+                const tgBadge = $('tgStatus');
+                const tgClear = $('btnTgClear');
+                const tgToken = $('tg_token');
+                const tgChat = $('tg_chatid');
+
+                if (tgConfigured) {
+                    tgBadge.className = 'status-badge ok';
+                    tgBadge.textContent = 'configured';
+                    tgClear.style.display = 'inline-block';
+                    tgToken.placeholder = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (already saved)';
+                    tgChat.placeholder  = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (already saved)';
+                    tgToken.value = '';
+                    tgChat.value = '';
+                } else {
+                    tgBadge.className = 'status-badge warn';
+                    tgBadge.textContent = 'not configured';
+                    tgClear.style.display = 'none';
+                    tgToken.placeholder = '123456789:ABCdefGHIjklMNOpqrsTUVwxyz';
+                    tgChat.placeholder  = '123456789';
+                }
+
+                /* --- Webhook --- */
+                whConfigured = !!data.webhook_configured;
+                const whBadge = $('whStatus');
+                const whClear = $('btnWhClear');
+                const whUrl = $('wh_url');
+                const whToken = $('wh_token');
+
+                if (whConfigured) {
+                    whBadge.className = 'status-badge ok';
+                    whBadge.textContent = 'configured';
+                    whClear.style.display = 'inline-block';
+                    whUrl.placeholder = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (already saved)';
+                    whToken.placeholder = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (already saved)';
+                    whUrl.value = '';
+                    whToken.value = '';
+                } else {
+                    whBadge.className = 'status-badge warn';
+                    whBadge.textContent = 'not configured';
+                    whClear.style.display = 'none';
+                    whUrl.placeholder = 'https://ntfy.sh/my-topic';
+                    whToken.placeholder = '(leave empty if not required)';
+                }
+
+            } catch (e) {
+                showMsg('msgInterval', 'error', 'Loading error: ' + e.message);
+            }
+        }
+
+        /* CHANGE PASSWORD */
+        $('btnPwd').addEventListener('click', async () => {
+            const old_pass = $('old_pass').value;
+            const new_pass = $('new_pass').value;
+            const confirm = $('confirm_pass').value;
+
+            if (!old_pass || !new_pass || !confirm) {
+                showMsg('msgPwd', 'error', 'Fill in all fields');
+                return;
+            }
+            if (new_pass !== confirm) {
+                showMsg('msgPwd', 'error', 'Passwords do not match');
+                return;
+            }
+            if (new_pass.length < 8) {
+                showMsg('msgPwd', 'error', 'Password must be at least 8 characters');
+                return;
+            }
+
+            const btn = $('btnPwd');
+            btn.disabled = true;
+
+            try {
+                const body = `old_pass=${encodeURIComponent(old_pass)}&new_pass=${encodeURIComponent(new_pass)}&confirm=${encodeURIComponent(confirm)}`;
+                const res = await fetch('/api/settings/password', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    showMsg('msgPwd', 'success', '&#9989; Password changed');
+                    $('old_pass').value = '';
+                    $('new_pass').value = '';
+                    $('confirm_pass').value = '';
+                } else {
+                    showMsg('msgPwd', 'error', '&#10060; ' + (data.error || 'Error'));
+                }
+            } catch (e) {
+                showMsg('msgPwd', 'error', 'Network error: ' + e.message);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        /* SCAN INTERVAL */
+        $('btnInterval').addEventListener('click', async () => {
+            const interval = $('interval').value;
+            const btn = $('btnInterval');
+            btn.disabled = true;
+
+            try {
+                const body = `interval=${encodeURIComponent(interval)}`;
+                const res = await fetch('/api/settings/scan-interval', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    showMsg('msgInterval', 'success',
+                        '&#9989; Interval set to ' + data.interval + ' minutes.<br>' +
+                        '<small>It will be active at the end of the current wait cycle.</small>');
+                } else {
+                    showMsg('msgInterval', 'error', '&#10060; ' + (data.error || 'Error'));
+                }
+            } catch (e) {
+                showMsg('msgInterval', 'error', 'Network error: ' + e.message);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        /* TELEGRAM - SAVE */
+        $('btnTgSave').addEventListener('click', async () => {
+            const token = $('tg_token').value.trim();
+            const chatid = $('tg_chatid').value.trim();
+
+            if (tgConfigured && !token && !chatid) {
+                showMsg('msgTg', 'info', 'Nothing to save');
+                return;
+            }
+            if (!token || !chatid) {
+                showMsg('msgTg', 'error', 'Fill in both Bot Token and Chat ID');
+                return;
+            }
+
+            const btn = $('btnTgSave');
+            btn.disabled = true;
+
+            try {
+                const body = `token=${encodeURIComponent(token)}&chatid=${encodeURIComponent(chatid)}`;
+                const res = await fetch('/api/settings/telegram', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    showMsg('msgTg', 'success', '&#9989; Telegram settings saved');
+                    loadSettings();
+                } else {
+                    showMsg('msgTg', 'error', '&#10060; ' + (data.error || 'Error'));
+                }
+            } catch (e) {
+                showMsg('msgTg', 'error', 'Network error: ' + e.message);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        /* TELEGRAM - TEST */
+        $('btnTgTest').addEventListener('click', async () => {
+            const token = $('tg_token').value.trim();
+            const chatid = $('tg_chatid').value.trim();
+
+            if (!token || !chatid) {
+                showMsg('msgTg', 'error', 'Enter Bot Token and Chat ID before testing');
+                return;
+            }
+
+            const btn = $('btnTgTest');
+            btn.disabled = true;
+            showMsg('msgTg', 'info', '&#128228; Sending test message...');
+
+            try {
+                const body = `token=${encodeURIComponent(token)}&chatid=${encodeURIComponent(chatid)}`;
+                const res = await fetch('/api/settings/telegram/test', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    showMsg('msgTg', 'success',
+                        '&#9989; Test message sent successfully.<br>' +
+                        '<small>Check Telegram and, if you receive it, click <b>Save</b>.</small>');
+                } else {
+                    showMsg('msgTg', 'error', '&#10060; ' + (data.error || 'Error'));
+                }
+            } catch (e) {
+                showMsg('msgTg', 'error', 'Network error: ' + e.message);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        /* TELEGRAM - CLEAR */
+        $('btnTgClear').addEventListener('click', async () => {
+            if (!confirm('Delete saved token and chat ID? You will need to re-enter them to use notifications.')) {
+                return;
+            }
+
+            const btn = $('btnTgClear');
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/settings/telegram/clear', { method: 'POST' });
+                const data = await res.json();
+
+                if (data.ok) {
+                    showMsg('msgTg', 'success', '&#128465; Telegram credentials deleted');
+                    loadSettings();
+                } else {
+                    showMsg('msgTg', 'error', '&#10060; ' + (data.error || 'Error'));
+                }
+            } catch (e) {
+                showMsg('msgTg', 'error', 'Network error: ' + e.message);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        /* WEBHOOK - SAVE */
+        $('btnWhSave').addEventListener('click', async () => {
+            const url = $('wh_url').value.trim();
+            const token = $('wh_token').value.trim();
+
+            if (whConfigured && !url && !token) {
+                showMsg('msgWh', 'info', 'Nothing to save');
+                return;
+            }
+            if (!url) {
+                showMsg('msgWh', 'error', 'Enter the webhook URL');
+                return;
+            }
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                showMsg('msgWh', 'error', 'URL must start with http:// or https://');
+                return;
+            }
+
+            const btn = $('btnWhSave');
+            btn.disabled = true;
+
+            try {
+                const body = `url=${encodeURIComponent(url)}&token=${encodeURIComponent(token)}`;
+                const res = await fetch('/api/settings/webhook', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    showMsg('msgWh', 'success', '&#9989; Webhook settings saved');
+                    loadSettings();
+                } else {
+                    showMsg('msgWh', 'error', '&#10060; ' + (data.error || 'Error'));
+                }
+            } catch (e) {
+                showMsg('msgWh', 'error', 'Network error: ' + e.message);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        /* WEBHOOK - TEST */
+        $('btnWhTest').addEventListener('click', async () => {
+            const url = $('wh_url').value.trim();
+            const token = $('wh_token').value.trim();
+
+            if (!url) {
+                showMsg('msgWh', 'error', 'Enter the webhook URL before testing');
+                return;
+            }
+
+            const btn = $('btnWhTest');
+            btn.disabled = true;
+            showMsg('msgWh', 'info', '&#128228; Sending test message...');
+
+            try {
+                const body = `url=${encodeURIComponent(url)}&token=${encodeURIComponent(token)}`;
+                const res = await fetch('/api/settings/webhook/test', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    showMsg('msgWh', 'success',
+                        '&#9989; Test message sent successfully.<br>' +
+                        '<small>Check the service and, if you receive it, click <b>Save</b>.</small>');
+                } else {
+                    showMsg('msgWh', 'error', '&#10060; ' + (data.error || 'Error'));
+                }
+            } catch (e) {
+                showMsg('msgWh', 'error', 'Network error: ' + e.message);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        /* WEBHOOK - CLEAR */
+        $('btnWhClear').addEventListener('click', async () => {
+            if (!confirm('Delete saved webhook URL and token? You will need to re-enter them to use notifications.')) {
+                return;
+            }
+
+            const btn = $('btnWhClear');
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/settings/webhook/clear', { method: 'POST' });
+                const data = await res.json();
+
+                if (data.ok) {
+                    showMsg('msgWh', 'success', '&#128465; Webhook credentials deleted');
+                    loadSettings();
+                } else {
+                    showMsg('msgWh', 'error', '&#10060; ' + (data.error || 'Error'));
+                }
+            } catch (e) {
+                showMsg('msgWh', 'error', 'Network error: ' + e.message);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        /* BACKUP - EXPORT */
+        $('btnExport').addEventListener('click', async () => {
+            const btn = $('btnExport');
+            btn.disabled = true;
+            showMsg('msgBackup', 'info', '&#128229; Generating backup file...');
+
+            try {
+                const res = await fetch('/api/backup/export');
+                if (!res.ok) {
+                    showMsg('msgBackup', 'error', '&#10060; Error: HTTP ' + res.status);
+                    btn.disabled = false;
+                    return;
+                }
+
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'networkwatcher-backup-' + new Date().toISOString().slice(0,10) + '.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+                showMsg('msgBackup', 'success', '&#9989; File downloaded');
+            } catch (e) {
+                showMsg('msgBackup', 'error', 'Network error: ' + e.message);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        /* BACKUP - IMPORT */
+        $('import_file').addEventListener('change', () => {
+            const hasFile = $('import_file').files.length > 0;
+            $('btnImport').disabled = !hasFile;
+        });
+
+        $('btnImport').addEventListener('click', async () => {
+            const file = $('import_file').files[0];
+            if (!file) return;
+
+            if (!confirm('Are you sure? Current MAC lists will be REPLACED with those from the file. This operation is not reversible.')) {
+                return;
+            }
+
+            const btn = $('btnImport');
+            btn.disabled = true;
+            showMsg('msgBackup', 'info', '&#128228; Importing...');
+
+            try {
+                const text = await file.text();
+
+                const res = await fetch('/api/backup/import', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: text
+                });
+
+                const data = await res.json();
+
+                if (data.ok) {
+                    const imp = data.imported || {};
+                    showMsg('msgBackup', 'success',
+                        '&#9989; Import completed:<br>' +
+                        'Whitelist: <b>' + (imp.whitelist || 0) + '</b> &mdash; ' +
+                        'Blacklist: <b>' + (imp.blacklist || 0) + '</b> &mdash; ' +
+                        'Unknown: <b>' + (imp.unknown || 0) + '</b>');
+                    $('import_file').value = '';
+                } else {
+                    showMsg('msgBackup', 'error', '&#10060; ' + (data.error || 'Error'));
+                    $('import_file').value = '';
+                }
+            } catch (e) {
+                showMsg('msgBackup', 'error', 'Network error: ' + e.message);
+            } finally {
+                btn.disabled = true;
+            }
+        });
+
+        /* FACTORY RESET */
+        $('btnReset').addEventListener('click', async () => {
+            const confirm = $('reset_confirm').value.trim();
+
+            if (confirm !== 'RESET') {
+                showMsg('msgReset', 'error', '&#10060; Type RESET to confirm');
+                return;
+            }
+
+            if (!window.confirm('Are you sure? All data will be permanently deleted.')) {
+                return;
+            }
+
+            const btn = $('btnReset');
+            btn.disabled = true;
+
+            try {
+                const body = `confirm=${encodeURIComponent(confirm)}`;
+                const res = await fetch('/api/settings/factory-reset', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    showMsg('msgReset', 'info',
+                        '&#128260; Reset in progress... the device will restart in AP mode.<br>' +
+                        'Reconnect to "Network Watcher" and login with admin/admin.');
+                } else {
+                    showMsg('msgReset', 'error', '&#10060; ' + (data.error || 'Error'));
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                showMsg('msgReset', 'info',
+                    '&#128260; Device restarting... wait 10 seconds, then reconnect to the AP.');
+            }
+        });
+
+        window.addEventListener('load', loadSettings);
+    </script>
+</body>
+</html>

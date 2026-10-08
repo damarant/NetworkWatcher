@@ -1,0 +1,37 @@
+# Normalize line endings
+# https://git-scm.com/docs/gitattributes
+
+# Text files: LF in repository, platform-native in working directory
+* text=auto eol=lf
+
+# Windows scripts: keep CRLF for correct execution
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Force LF for these (already do)
+*.c    text eol=lf
+*.h    text eol=lf
+*.md   text eol=lf
+*.html text eol=lf
+*.css  text eol=lf
+*.js   text eol=lf
+*.json text eol=lf
+*.csv  text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.txt  text eol=lf
+CMakeLists.txt text eol=lf
+
+# Binary files: never touch
+*.bin binary
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.zip binary
+
+# Mark generated files as such (for linguist and diff)
+docs/firmware/*.bin linguist-generated=true
+build/* -diff

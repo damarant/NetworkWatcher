@@ -302,7 +302,6 @@ static esp_err_t handler_api_login(httpd_req_t *req)
              AUTH_COOKIE_NAME, token, NW_SESSION_TIMEOUT_S);
 
     httpd_resp_set_hdr(req, "Set-Cookie", cookie_hdr);
-    httpd_resp_set_type(req, "text/html; charset=utf-8");
 
     const char *dest;
     if (auth_must_change_password()) {
@@ -313,19 +312,11 @@ static esp_err_t handler_api_login(httpd_req_t *req)
         dest = "/";
     }
 
-    char html[512];
-    snprintf(html, sizeof(html),
-             "<!DOCTYPE html><html><head>"
-             "<meta charset=\"UTF-8\">"
-             "<meta http-equiv=\"refresh\" content=\"0; url=%s\">"
-             "<title>Redirect</title></head>"
-             "<body><p>Redirecting to <a href=\"%s\">%s</a>...</p>"
-             "</body></html>",
-             dest, dest, dest);
-
     ESP_LOGI(TAG, "login OK, redirect to %s", dest);
 
-    httpd_resp_send(req, html, HTTPD_RESP_USE_STRLEN);
+    httpd_resp_set_status(req, "302 Found");
+    httpd_resp_set_hdr(req, "Location", dest);
+    httpd_resp_send(req, NULL, 0);   /* body vuoto → niente da inviare → niente errore */
     return ESP_OK;
 }
 

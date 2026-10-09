@@ -281,6 +281,7 @@
     <script>
         const $ = (id) => document.getElementById(id);
         let currentData = null;
+        let isEditing = false;
 
         function setMsg(type, text) {
             const m = $('msg');
@@ -360,7 +361,12 @@
             });
 
             tbody.querySelectorAll('input[data-mac]').forEach(inp => {
+                inp.addEventListener('focus', () => {
+                    isEditing = true;
+                });
+
                 inp.addEventListener('blur', async () => {
+                    isEditing = false;
                     const mac = inp.dataset.mac;
                     const type = inp.dataset.type;
                     const desc = inp.value.trim();
@@ -439,6 +445,7 @@
         }
 
         async function loadLists() {
+            if (isEditing) return;
             try {
                 const res = await fetch('/api/lists');
                 if (!res.ok) throw new Error('HTTP ' + res.status);

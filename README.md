@@ -22,6 +22,45 @@ notifications when new or blacklisted devices appear on the network.
 - **mDNS** — `network-watcher.local`
 - **Factory reset** — via button or web UI
 
+
+## Why NetworkWatcher
+
+Four reasons that make NetworkWatcher a practical, self-contained alternative to a Raspberry Pi–based monitor — with no cloud dependency and near-zero running cost.
+
+### ⚡ Efficiency & low power
+
+- Runs on a **WEMOS S2 Mini (ESP32-S2)** board that costs just a few euros, so the whole setup stays affordable.
+- Draws a fraction of the power required by a mini-PC, and can stay on **24/7** with a negligible impact on your electricity bill.
+
+### 🛡️ Proactive monitoring & security
+
+- **ARP scans** run as often as once per minute, so new devices are spotted almost immediately.
+- **Telegram** and **webhook** notifications reach your phone in real time when an unknown or blacklisted device appears.
+- The **on-board LED** gives instant visual feedback without opening the web UI: solid for a blacklist match, blinking for unknown devices.
+
+### 🌐 Ease of use & autonomy
+
+- A built-in **web interface** (password-protected) is reachable from any PC or phone at `http://network-watcher.local` — no command line required.
+- Everything runs **on the chip**: your data, history and MAC addresses stay local and are never sent to third-party servers, except for the notifications you explicitly configure.
+- **JSON backup and restore** let you save your device lists, move them to another board, or recover them after a failure in seconds.
+
+### 🧠 Smart features
+
+- **OUI vendor lookup** with a built-in database of ~60 manufacturers helps you identify what just joined the network (Apple, Samsung, Tuya, and more).
+- **Generic webhooks** integrate with Discord, Slack, Home Assistant, ntfy.sh, Gotify, or any custom endpoint — perfect for existing home-automation setups.
+
+
+## Web UI Screenshots
+
+A gallery of the user interface sections, showing the configuration and monitoring pages in miniature.
+
+<p align="center">
+  <img src="docs/screenshots/NetworkWatcherAll.jpg"
+       alt="NetworkWatcher Web UI overview — dashboard, Wi-Fi setup, network scan, settings, backup/restore, system log and MAC lists"
+       width="900">
+</p>
+
+
 ## Hardware
 
 | Component | Details |
